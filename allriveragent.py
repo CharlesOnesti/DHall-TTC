@@ -1,3 +1,6 @@
+import params
+import random
+
 class AllRiverAgent():
   def __init__(self, id, initial_house):
     """Agent (either dummy or not) possess preferences and have initial house assignment which does not change
@@ -9,7 +12,7 @@ class AllRiverAgent():
     """
     self.id = id
     self.initial_house = initial_house
-    self.preferences = []
+    self.preferences = random.shuffle(params.allRiverHouses)
 
   def report_pref(self):
     #TODO preferences probability distribution 
