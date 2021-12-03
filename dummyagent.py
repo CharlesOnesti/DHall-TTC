@@ -1,4 +1,4 @@
-class Dummy():
+class DummyAgent():
   def __init__(self, id, initial_house, target_house):
     self.id = id
     self.initial_house = initial_house

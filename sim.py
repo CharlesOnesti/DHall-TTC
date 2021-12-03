@@ -1,7 +1,13 @@
 import sys
 import cProfile
 from params import agent_params
-from agent import Agent
+from quadagent import QuadAgent
+from allriveragent import AllRiverAgent
+from rivercentralagent import RiverCentralAgent
+from rivereastagent import RiverEastAgent
+from riverwestagent import RiverWestAgent
+from particularagent import ParticularAgent
+from dummyagent import DummyAgent
 
 class Sim():
   def __init__(self):
@@ -22,38 +28,36 @@ class Sim():
       idCounter = 0
       for house in self.agent_params:
         for agent_type in self.agent_params[house]:
-          match agent_type:
-            case "QuadAgent":
-              newAgents = [QuadAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
-              idCounter += self.agent_params[house][agent_type]
+          if agent_type == "QuadAgent":
+            newAgents = [QuadAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
+            idCounter += self.agent_params[house][agent_type]
+            agent_objects.extend(newAgents)
+          elif agent_type == "RiverEastAgent":
+            newAgents = [RiverEastAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
+            idCounter += self.agent_params[house][agent_type]
+            agent_objects.extend(newAgents)
+          elif agent_type ==  "RiverWestAgent":
+            newAgents = [RiverWestAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
+            idCounter += self.agent_params[house][agent_type]
+            agent_objects.extend(newAgents)
+          elif agent_type ==  "RiverCentralAgent":
+            newAgents = [RiverCentralAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
+            idCounter += self.agent_params[house][agent_type]
+            agent_objects.extend(newAgents)
+          elif agent_type ==  "AllRiverAgent":
+            newAgents = [AllRiverAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
+            idCounter += self.agent_params[house][agent_type]
+            agent_objects.extend(newAgents)
+          elif agent_type ==  "ParticularAgent":
+            for targetHouse in self.agent_params[house][agent_type]:
+              newAgents = [ParticularAgent(i, house, targetHouse) for i in range(idCounter, idCounter + self.agent_params[house][agent_type][targetHouse])]
+              idCounter += self.agent_params[house][agent_type][targetHouse]
               agent_objects.extend(newAgents)
-            case "RiverEastAgent":
-              newAgents = [RiverEastAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
-              idCounter += self.agent_params[house][agent_type]
+          elif agent_type ==  "DummyAgent":
+            for targetHouse in self.agent_params[house][agent_type]:
+              newAgents = [DummyAgent(i, house, targetHouse) for i in range(idCounter, idCounter + self.agent_params[house][agent_type][targetHouse])]
+              idCounter += self.agent_params[house][agent_type][targetHouse]
               agent_objects.extend(newAgents)
-            case "RiverWestAgent":
-              newAgents = [RiverWestAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
-              idCounter += self.agent_params[house][agent_type]
-              agent_objects.extend(newAgents)
-            case "RiverCentralAgent":
-              newAgents = [RiverCentralAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
-              idCounter += self.agent_params[house][agent_type]
-              agent_objects.extend(newAgents)
-            case "AllRiverAgent":
-              newAgents = [AllRiverAgent(i, house) for i in range(idCounter, idCounter + self.agent_params[house][agent_type])]
-              idCounter += self.agent_params[house][agent_type]
-              agent_objects.extend(newAgents)
-            case "ParticularAgent":
-              for targetHouse in self.agent_parms[house][agent_type]:
-                newAgents = [ParticularAgent(i, house, targetHouse) for i in range(idCounter, idCounter + self.agent_params[house][agent_type][targeHouse])]
-                idCounter += self.agent_params[house][agent_type][targeHouse]
-                agent_objects.extend(newAgents)
-            case "DummyAgent":
-              for targeHouse in self.agent_params[house][agent_type]:
-                newAgents = [DummyAgent(i, house, targetHouse) for i in range(idCounter, idCounter + self.agent_params[house][agent_type][targeHouse])]
-                idCounter += self.agent_params[house][agent_type][targeHouse]
-                agent_objects.extend(newAgents)
-
       return agent_objects
     
     #TODO create ttc graph
@@ -61,9 +65,14 @@ class Sim():
       pass
     
     #TODO update dictionary where dictionary is agent id -> top house name mapping; only have agents in dictionary that still need to be matched
-    #ex: {1: 'adams', 2: 'quincy', 3: 'dunster}
-    def update_target():
-        pass
+    def update_targets(agent_list):
+      # for agent in agent_list:
+      #   if agent.preferences == []: remove from the TTC procedure
+
+    agent_list = initialize_agents()
+    for a in agent_list:
+      print(a.preferences)
+
 
 def main():
   sim = Sim()
