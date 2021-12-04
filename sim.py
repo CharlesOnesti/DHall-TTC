@@ -76,6 +76,7 @@ class Sim():
     agent_list = initialize_agents()
     priority_agent_list = copy.deepcopy(agent_list)
     random.shuffle(priority_agent_list)
+    matchings = dict()
 
     #Randomize Agent_list order
     def find_target(agent, priority_agent_list):
@@ -92,15 +93,39 @@ class Sim():
             return a_j
         agent.preferences.pop()
       return None
+
     # step 1 find the targets of all agents. so that agents are nodes and their targets are ptrs
     for agent in agent_list:
       agent.target = find_target(agent, priority_agent_list)
+
+    #remove agents with self loops bc need SCC
+    for agent in priority_agent_list:
+      if not agent.target:
+        priority_agent_list.remove(agent)
+        
+
     # step 2 find cycles in the network
+    #TODO shouldn't it be priority_agent_list?
     graph = Graph(agent_list)
     for agent in agent_list:
       if agent.target is not None:
         graph.addEdge(agent, agent.target)
     graph.printSCCs()
+    #TODO cycles_list: list of lists ? ex: [[Agent1, Agent2, Agent3], [Agent4, Agent 5]]
+
+    #Filter out lists in cycles_list that are of length one (not a cycle)
+    cycles_list = list(filter(lambda c: len(c) > 1, cycles_list))
+
+    #Using cycles_list, goes through and removes agents in cycles from priority_agent_list as well as creates dictionary of matchings
+    for cycle in cycles_list:
+      for i in range(len(cycle)):
+        agent = cycle[i]
+        priority_agent_list.remove(agent)
+        if i == (len(cycle) - 1):
+          matchings[agent] = cycle[0]
+        else:
+          matchings[agent] = cycle[i + 1]
+
 
 
     # for agent in priority_agent_list:
@@ -117,10 +142,6 @@ class Sim():
     #     priority_agent_list.remove(trader)
     # step 3 remove agents that have target == None
     
-
-        
-        
-      priority_agent_list.remove(a_j)
 
 
 def main():
