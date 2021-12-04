@@ -10,6 +10,7 @@ from rivereastagent import RiverEastAgent
 from riverwestagent import RiverWestAgent
 from particularagent import ParticularAgent
 from dummyagent import DummyAgent
+from graph import Graph
 
 class Sim():
   def __init__(self):
@@ -73,21 +74,53 @@ class Sim():
       pass
       
     agent_list = initialize_agents()
-    priority_agent_list = random.shuffle(copy.deepcopy(agent_list))
+    priority_agent_list = copy.deepcopy(agent_list)
+    random.shuffle(priority_agent_list)
+
     #Randomize Agent_list order
     def find_target(agent, priority_agent_list):
+      """Returns id of top priority agent that a certain agent or None 
+      Args:
+          agent (Agent): agent object
+          priority_agent_list ([Agent]): list of agents in random priority order
+      Returns:
+          id of target agent
+      """
       while len(agent.preferences) > 0:
         for a_j in priority_agent_list:
-          if agent.preferences[0] == a_j.currentHouse:
+          if agent.preferences[0] == a_j.initial_house:
             return a_j
         agent.preferences.pop()
       return None
+    # step 1 find the targets of all agents. so that agents are nodes and their targets are ptrs
+    for agent in agent_list:
+      agent.target = find_target(agent, priority_agent_list)
+    # step 2 find cycles in the network
+    graph = Graph(agent_list)
+    for agent in agent_list:
+      if agent.target is not None:
+        graph.addEdge(agent, agent.target)
+    graph.printSCCs()
+
+
+    # for agent in priority_agent_list:
+    #   current = agent.id
+    #   visited = []
+    #   while current not in visited:
+    #     if current not in map(lambda x: x.id, priority_agent_list):
+    #       break
+    #     visited.append(current)
+    #     current = current.target
+    #   root = visited.index(current)
+    #   for trader in visited[root:]:
+    #     trader.assigned_house = agent.preferences[0]
+    #     priority_agent_list.remove(trader)
+    # step 3 remove agents that have target == None
     
-    for a_i in agent_list:
-      a_i.target = find_target(a_i, agent_priority_list)
+
         
         
-          priority_agent_list.remove(a_j)
+      priority_agent_list.remove(a_j)
 
 
 def main():
