@@ -1,5 +1,7 @@
 import sys
 import cProfile
+import random
+import copy
 from params import agent_params
 from quadagent import QuadAgent
 from allriveragent import AllRiverAgent
@@ -68,10 +70,24 @@ class Sim():
     def update_targets(agent_list):
       # for agent in agent_list:
       #   if agent.preferences == []: remove from the TTC procedure
-
+      pass
+      
     agent_list = initialize_agents()
-    for a in agent_list:
-      print(a.preferences)
+    priority_agent_list = random.shuffle(copy.deepcopy(agent_list))
+    #Randomize Agent_list order
+    def find_target(agent, priority_agent_list):
+      while len(agent.preferences) > 0:
+        for a_j in priority_agent_list:
+          if agent.preferences[0] == a_j.currentHouse:
+            return a_j
+        agent.preferences.pop()
+      return None
+    
+    for a_i in agent_list:
+      a_i.target = find_target(a_i, agent_priority_list)
+        
+        
+          priority_agent_list.remove(a_j)
 
 
 def main():
