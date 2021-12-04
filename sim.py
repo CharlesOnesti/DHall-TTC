@@ -2,7 +2,7 @@ import sys
 import cProfile
 import random
 import copy
-from params import agent_params
+import params
 from quadagent import QuadAgent
 from allriveragent import AllRiverAgent
 from rivercentralagent import RiverCentralAgent
@@ -14,10 +14,9 @@ from graph import Graph
 
 class Sim():
   def __init__(self):
-      self.weekday = True
-      self.lunch = False
       self.top_preferences = dict()
-      self.agent_params = agent_params
+      self.agent_params = params.test_params_3
+      self.final = []
 
       #Number of students
       #Distribution 
@@ -63,93 +62,91 @@ class Sim():
               agent_objects.extend(newAgents)
       return agent_objects
     
-    #TODO create ttc graph
-    def allocate():
-      pass
-    
-    #TODO update dictionary where dictionary is agent id -> top house name mapping; only have agents in dictionary that still need to be matched
-    def update_targets(agent_list):
-      # for agent in agent_list:
-      #   if agent.preferences == []: remove from the TTC procedure
-      pass
+ 
       
     agent_list = initialize_agents()
     priority_agent_list = copy.deepcopy(agent_list)
-    random.shuffle(priority_agent_list)
-    matchings = dict()
+    
+    random.Random(1).shuffle(priority_agent_list)
+    print("Priority:")
+    for i in (priority_agent_list):
+      print(i.id)
+      print("AGENT: ", i.id, ": ",i.preferences, ' initial house: ', i.initial_house, "Target: ", i.target)
+
 
     #Randomize Agent_list order
-    def find_target(agent, priority_agent_list):
+    def find_target(agent, p_agent_list):
       """Returns id of top priority agent that a certain agent or None 
       Args:
           agent (Agent): agent object
           priority_agent_list ([Agent]): list of agents in random priority order
       Returns:
-          id of target agent
+          agent
       """
       while len(agent.preferences) > 0:
-        for a_j in priority_agent_list:
+        for a_j in p_agent_list:
+          # print(len(agent.preferences))
           if agent.preferences[0] == a_j.initial_house:
+            # print("NEW TARGET: ", a_j)
             return a_j
-        agent.preferences.pop()
+        agent.preferences.pop(0)
+
       return None
 
-    # step 1 find the targets of all agents. so that agents are nodes and their targets are ptrs
-    for agent in agent_list:
-      agent.target = find_target(agent, priority_agent_list)
+    #Run TTC
+    roundIndex = 0
+    while len(priority_agent_list) > 0:
+      print("-" * 50, "ROUND ", roundIndex)
+      roundIndex += 1
+      print("LENGTH: ", len(priority_agent_list))
+      # step 1 find the targets of all agents. so that agents are nodes and their targets are ptrs
+      for agent in priority_agent_list:
+        agent.target = find_target(agent, priority_agent_list)
+      
+      # step 2 create edges in the network
+      graph = Graph(priority_agent_list)
+      for agent in priority_agent_list:
+        if agent.target is not None:
+          graph.addEdge(agent, agent.target)
+
+      # find cycles
+      graph.findSCCs()
+
+      # remove agents with self loops
+      for cycle in graph.sccs:
+        #print(cycle)
+        if len(cycle) == 1:
+          if cycle[0].target is None or cycle[0].target == cycle[0].initial_house :
+            self.final.append(cycle[0])
+            priority_agent_list.remove(cycle[0])
+      
+
+      # Filter out lists in graph.sccs that are of length one (not a cycle)
+      valid_cycles = list(filter(lambda c: len(c) > 1, graph.sccs))
+
+      # Using graph.sccs, goes through and removes agents in cycles from priority_agent_list as well as creates dictionary of matchings
+      print(valid_cycles)
+      if valid_cycles == []:
+        break
         
-    # step 2 find cycles in the network
-    graph = Graph(priority_agent_list)
-    for agent in priority_agent_list:
-      if agent.target is not None:
-        graph.addEdge(agent, agent.target)
-    graph.printSCCs()
-    #TODO cycles_list: list of lists ? ex: [[Agent1, Agent2, Agent3], [Agent4, Agent 5], [Agent 7]]
+      for cycle in valid_cycles:
+        for i in range(len(cycle)):
+          agent = cycle[i]
+          self.final.append(agent)
+          priority_agent_list.remove(agent)
+          if i == (len(cycle) - 1):
+            agent.assigned_house = cycle[0].initial_house
+          else:
+            agent.assigned_house = cycle[i + 1].initial_house
 
-    #remove agents with self loops
-    for cycle in cycles_list:
-      if len(cycle) == 1:
-        if not cycle[0].target:
-          priority_agent_list.remove(cycle[0])
-    
-    
-    #Filter out lists in cycles_list that are of length one (not a cycle)
-    cycles_list = list(filter(lambda c: len(c) > 1, cycles_list))
-
-    #Using cycles_list, goes through and removes agents in cycles from priority_agent_list as well as creates dictionary of matchings
-    for cycle in cycles_list:
-      for i in range(len(cycle)):
-        agent = cycle[i]
-        priority_agent_list.remove(agent)
-        if i == (len(cycle) - 1):
-          agent.assigned_house = cycle[0]
-        else:
-          agent.assigned_house = cycle[i + 1]
-
-
-
-    # for agent in priority_agent_list:
-    #   current = agent.id
-    #   visited = []
-    #   while current not in visited:
-    #     if current not in map(lambda x: x.id, priority_agent_list):
-    #       break
-    #     visited.append(current)
-    #     current = current.target
-    #   root = visited.index(current)
-    #   for trader in visited[root:]:
-    #     trader.assigned_house = agent.preferences[0]
-    #     priority_agent_list.remove(trader)
-    # step 3 remove agents that have target == None
-    
-
+  def printMatchings(self):    
+    for agent in self.final:
+      print('ID: ', agent.id, ' ' * (10-len(str(agent.id))), 'Initial house: ', agent.initial_house, ' ' * (10-len(agent.initial_house)),'Assigned house: ', agent.assigned_house)
 
 def main():
   sim = Sim()
   sim.run_sim()
+  sim.printMatchings()
 
 if __name__ == "__main__":
   cProfile.run('main()',"profile.txt")
-
-
-    

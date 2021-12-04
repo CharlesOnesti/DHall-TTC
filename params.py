@@ -1,8 +1,51 @@
+from particularagent import ParticularAgent
+from rivercentralagent import RiverCentralAgent
+
+seed = 1
+
 riverEastHouses = ['dunster', 'leverett', 'mather']
 riverCentralHouses = ['adams', 'lowell', 'quincy']
 riverWestHouses = ['winthrop', 'kirkland', 'eliot']
 allRiverHouses = ['dunster', 'leverett', 'mather', 'adams', 'lowell', 'quincy', 'winthrop', 'kirkland', 'eliot']
 quadHouses = ['cabot', 'currier', 'pfoho']
+
+test_params = {
+  'adams': {
+    'QuadAgent': 1,
+    'ParticularAgent': {
+      'dunster': 1,
+    },
+  },
+  'currier': {
+    'RiverCentralAgent': 1,
+  },
+  'dunster': {
+    'ParticularAgent': {
+      'adams': 1
+    },
+  }
+}
+
+test_params_3 = {
+  'adams': {
+    'QuadAgent': 2,
+    'ParticularAgent': {
+      'dunster': 1,
+    },
+  },
+  'currier': {
+    'RiverCentralAgent': 2,
+  },
+  'dunster': {
+    'ParticularAgent': {
+      'adams': 1
+    }
+  },
+  'mather': {
+    'QuadAgent': 1,
+  }
+}
+
 
 agent_params = {
   'adams': {
