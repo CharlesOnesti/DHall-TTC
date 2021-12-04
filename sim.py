@@ -97,22 +97,22 @@ class Sim():
     # step 1 find the targets of all agents. so that agents are nodes and their targets are ptrs
     for agent in agent_list:
       agent.target = find_target(agent, priority_agent_list)
-
-    #remove agents with self loops bc need SCC
-    for agent in priority_agent_list:
-      if not agent.target:
-        priority_agent_list.remove(agent)
         
-
     # step 2 find cycles in the network
-    #TODO shouldn't it be priority_agent_list?
-    graph = Graph(agent_list)
-    for agent in agent_list:
+    graph = Graph(priority_agent_list)
+    for agent in priority_agent_list:
       if agent.target is not None:
         graph.addEdge(agent, agent.target)
     graph.printSCCs()
-    #TODO cycles_list: list of lists ? ex: [[Agent1, Agent2, Agent3], [Agent4, Agent 5]]
+    #TODO cycles_list: list of lists ? ex: [[Agent1, Agent2, Agent3], [Agent4, Agent 5], [Agent 7]]
 
+    #remove agents with self loops
+    for cycle in cycles_list:
+      if len(cycle) == 1:
+        if not cycle[0].target:
+          priority_agent_list.remove(cycle[0])
+    
+    
     #Filter out lists in cycles_list that are of length one (not a cycle)
     cycles_list = list(filter(lambda c: len(c) > 1, cycles_list))
 
@@ -122,9 +122,9 @@ class Sim():
         agent = cycle[i]
         priority_agent_list.remove(agent)
         if i == (len(cycle) - 1):
-          matchings[agent] = cycle[0]
+          agent.assigned_house = cycle[0]
         else:
-          matchings[agent] = cycle[i + 1]
+          agent.assigned_house = cycle[i + 1]
 
 
 
