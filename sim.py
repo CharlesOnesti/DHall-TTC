@@ -147,7 +147,9 @@ class Sim():
   def printStats(self):
     numberOfSwaps = 0
     sumImprovement = 0
-    numberOfErrors = 0
+    preferenceCounter = [0 for i in range(12)]
+    houses = ['dunster', 'leverett', 'mather', 'adams', 'lowell', 'quincy', 'winthrop', 'kirkland', 'eliot', 'cabot', 'currier', 'pfoho']
+    diningHallNumbers = {x: 0 for x in houses}
     for agent in self.final:
       print('ID: ', agent.id, ' ' * (7-len(str(agent.id))), 'Initial house: ', agent.initial_house, ' ' * (10-len(agent.initial_house)),'Assigned house: ', agent.assigned_house, ' ' * (10-len(agent.assigned_house)), 'Immutable_preferences: ', agent.immutable_preferences)
       if agent.initial_house != agent.assigned_house:
@@ -160,18 +162,15 @@ class Sim():
       else:
         houseOrdering = copy.deepcopy(agent.immutable_preferences)
       
-      # print(houseOrdering)
-      # print(agent.initial_house)
-      # print(agent.assigned_house)
-      if agent.assigned_house not in houseOrdering:
-        numberOfErrors += 1
-    
-      improvement = (houseOrdering.index(agent.initial_house) - houseOrdering.index(agent.assigned_house))/len(houseOrdering)
-      sumImprovement += improvement / len(self.final)
+      diningHallNumbers[agent.assigned_house] += 1
+      preferenceCounter[houseOrdering.index(agent.assigned_house)] += 1
+      improvement = (houseOrdering.index(agent.initial_house) - houseOrdering.index(agent.assigned_house))/ max(len(houseOrdering) - 1, 1)
+      sumImprovement += improvement
 
-    print("Sum Improvement: ", sumImprovement)
-    print("Number of Errors: ", numberOfErrors)
-      
+
+    print("Average Improvement: ", float(sumImprovement) / len(self.final))
+    print("Preference Counter: ", preferenceCounter)
+    print("Dining Hall Numbers: ", diningHallNumbers)
     print("Number of Swaps: ", numberOfSwaps)
     
 
