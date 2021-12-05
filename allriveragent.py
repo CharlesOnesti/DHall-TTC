@@ -11,6 +11,8 @@ class AllRiverAgent():
     self.preferences = temp_pref
     self.target = None
     self.assigned_house = initial_house
+    self.immutable_preferences = copy.deepcopy(temp_pref)
+
 
   def report_pref(self):
     #TODO preferences probability distribution 

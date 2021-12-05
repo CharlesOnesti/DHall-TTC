@@ -15,8 +15,9 @@ from graph import Graph
 class Sim():
   def __init__(self):
       self.top_preferences = dict()
-      self.agent_params = params.test_params_3
+      self.agent_params = params.Weekday_Lunch
       self.final = []
+      self.all_cycles = []
 
       #Number of students
       #Distribution 
@@ -68,10 +69,11 @@ class Sim():
     priority_agent_list = copy.deepcopy(agent_list)
     
     random.Random(1).shuffle(priority_agent_list)
-    print("Priority:")
-    for i in (priority_agent_list):
-      print(i.id)
-      print("AGENT: ", i.id, ": ",i.preferences, ' initial house: ', i.initial_house, "Target: ", i.target)
+    # print("Priority:")
+    # for i in (priority_agent_list):
+    #   print("ID:", i.id)
+    #   print("AGENT: ", i.id, ": ",i.preferences, ' Initial house: ', i.initial_house, " Target: ", i.target)
+    #   print('')
 
 
     #Randomize Agent_list order
@@ -95,6 +97,7 @@ class Sim():
 
     #Run TTC
     roundIndex = 0
+
     while len(priority_agent_list) > 0:
       print("-" * 50, "ROUND ", roundIndex)
       roundIndex += 1
@@ -116,7 +119,8 @@ class Sim():
       for cycle in graph.sccs:
         #print(cycle)
         if len(cycle) == 1:
-          if cycle[0].target is None or cycle[0].target == cycle[0].initial_house :
+          if cycle[0].target is None or cycle[0].target.initial_house == cycle[0].initial_house:
+            print("Removing: ", cycle[0].id)
             self.final.append(cycle[0])
             priority_agent_list.remove(cycle[0])
       
@@ -125,7 +129,9 @@ class Sim():
       valid_cycles = list(filter(lambda c: len(c) > 1, graph.sccs))
 
       # Using graph.sccs, goes through and removes agents in cycles from priority_agent_list as well as creates dictionary of matchings
-      print(valid_cycles)
+      print('REMOVED: ', list(map(lambda x: list(map(lambda y: y.id, x)),valid_cycles)))
+      self.all_cycles.extend(valid_cycles)
+      
       if valid_cycles == []:
         break
         
@@ -134,19 +140,52 @@ class Sim():
           agent = cycle[i]
           self.final.append(agent)
           priority_agent_list.remove(agent)
-          if i == (len(cycle) - 1):
-            agent.assigned_house = cycle[0].initial_house
-          else:
-            agent.assigned_house = cycle[i + 1].initial_house
+          agent.assigned_house = agent.target.initial_house
+      
+      print("REMAINING: ", list(map(lambda x: x.id, priority_agent_list)))
 
-  def printMatchings(self):    
+  def printStats(self):
+    numberOfSwaps = 0
+    sumImprovement = 0
+    numberOfErrors = 0
     for agent in self.final:
-      print('ID: ', agent.id, ' ' * (10-len(str(agent.id))), 'Initial house: ', agent.initial_house, ' ' * (10-len(agent.initial_house)),'Assigned house: ', agent.assigned_house)
+      print('ID: ', agent.id, ' ' * (7-len(str(agent.id))), 'Initial house: ', agent.initial_house, ' ' * (10-len(agent.initial_house)),'Assigned house: ', agent.assigned_house, ' ' * (10-len(agent.assigned_house)), 'Immutable_preferences: ', agent.immutable_preferences)
+      if agent.initial_house != agent.assigned_house:
+        numberOfSwaps += 1
+      
+      if agent.initial_house not in agent.immutable_preferences:
+        houseOrdering = (copy.deepcopy(agent.immutable_preferences))
+        houseOrdering.append(agent.initial_house)
+        print(houseOrdering)
+      else:
+        houseOrdering = copy.deepcopy(agent.immutable_preferences)
+      
+      # print(houseOrdering)
+      # print(agent.initial_house)
+      # print(agent.assigned_house)
+      if agent.assigned_house not in houseOrdering:
+        numberOfErrors += 1
+    
+      improvement = (houseOrdering.index(agent.initial_house) - houseOrdering.index(agent.assigned_house))/len(houseOrdering)
+      sumImprovement += improvement / len(self.final)
+
+    print("Sum Improvement: ", sumImprovement)
+    print("Number of Errors: ", numberOfErrors)
+      
+    print("Number of Swaps: ", numberOfSwaps)
+    
+
+
+    # numCycles = 0
+    # for cycle in self.all_cycles:
+    #   numCycles += len(cycle)
+    print("Average Cycle Length", len(sum(self.all_cycles, [])) / len(self.all_cycles))
+    
+    
 
 def main():
   sim = Sim()
   sim.run_sim()
-  sim.printMatchings()
-
+  sim.printStats()
 if __name__ == "__main__":
   cProfile.run('main()',"profile.txt")
