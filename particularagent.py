@@ -7,6 +7,7 @@ class ParticularAgent():
     self.immutable_preferences = [target_house]
     self.target = None
     self.assigned_house = initial_house
+    self.type = "Particular"
      
   def report_pref(self):
     #TODO preferences probability distribution 

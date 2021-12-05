@@ -12,6 +12,7 @@ class QuadAgent():
     self.immutable_preferences = copy.deepcopy(temp_pref)
     self.target = None
     self.assigned_house = initial_house
+    self.type = "Quad"
 
   def report_pref(self):
     #TODO preferences probability distribution 

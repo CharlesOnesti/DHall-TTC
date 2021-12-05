@@ -28,6 +28,7 @@ class Sim():
     #TODO create the agents from the options and assign prob distributions based on whether is dinner/lunch/weekday/weekend
     def initialize_agents():
       agent_objects = []
+      dummy_agents = []
       idCounter = 0
       for house in self.agent_params:
         for agent_type in self.agent_params[house]:
@@ -60,15 +61,19 @@ class Sim():
             for targetHouse in self.agent_params[house][agent_type]:
               newAgents = [DummyAgent(i, house, targetHouse) for i in range(idCounter, idCounter + self.agent_params[house][agent_type][targetHouse])]
               idCounter += self.agent_params[house][agent_type][targetHouse]
+              #dummy_agents.extend(newAgents)
               agent_objects.extend(newAgents)
-      return agent_objects
+      return agent_objects, dummy_agents
     
  
       
-    agent_list = initialize_agents()
+    agent_list, dummys = initialize_agents()
     priority_agent_list = copy.deepcopy(agent_list)
     
     random.Random(1).shuffle(priority_agent_list)
+    priority_agent_list.extend(dummys)
+    # random.Random(1).shuffle(dummys)
+    # priority_agent_list.extend(dummys)
     # print("Priority:")
     # for i in (priority_agent_list):
     #   print("ID:", i.id)
@@ -96,11 +101,11 @@ class Sim():
       return None
 
     #Run TTC
-    roundIndex = 0
+    self.roundIndex = 0
 
     while len(priority_agent_list) > 0:
-      print("-" * 50, "ROUND ", roundIndex)
-      roundIndex += 1
+      print("-" * 50, "ROUND ", self.roundIndex)
+      self.roundIndex += 1
       print("LENGTH: ", len(priority_agent_list))
       # step 1 find the targets of all agents. so that agents are nodes and their targets are ptrs
       for agent in priority_agent_list:
@@ -133,20 +138,23 @@ class Sim():
       self.all_cycles.extend(valid_cycles)
       
       if valid_cycles == []:
-        break
-        
-      for cycle in valid_cycles:
-        for i in range(len(cycle)):
-          agent = cycle[i]
-          self.final.append(agent)
-          priority_agent_list.remove(agent)
-          agent.assigned_house = agent.target.initial_house
+        #break
+        pass
+      else:
+        for cycle in valid_cycles:
+          for i in range(len(cycle)):
+            agent = cycle[i]
+            self.final.append(agent)
+            priority_agent_list.remove(agent)
+            agent.assigned_house = agent.target.initial_house
       
       print("REMAINING: ", list(map(lambda x: x.id, priority_agent_list)))
+    #print("Total Rounds: ", self.roundIndex)
 
   def printStats(self):
     numberOfSwaps = 0
     sumImprovement = 0
+    nonDummyAgents = 0
     preferenceCounter = [0 for i in range(12)]
     houses = ['dunster', 'leverett', 'mather', 'adams', 'lowell', 'quincy', 'winthrop', 'kirkland', 'eliot', 'cabot', 'currier', 'pfoho']
     diningHallNumbers = {x: 0 for x in houses}
@@ -162,13 +170,19 @@ class Sim():
       else:
         houseOrdering = copy.deepcopy(agent.immutable_preferences)
       
-      diningHallNumbers[agent.assigned_house] += 1
-      preferenceCounter[houseOrdering.index(agent.assigned_house)] += 1
-      improvement = (houseOrdering.index(agent.initial_house) - houseOrdering.index(agent.assigned_house))/ max(len(houseOrdering) - 1, 1)
-      sumImprovement += improvement
+      print(agent.type)
+      
+      if agent.type != "Dummy":
+        diningHallNumbers[agent.assigned_house] += 1
+        preferenceCounter[houseOrdering.index(agent.assigned_house)] += 1
+        improvement = (houseOrdering.index(agent.initial_house) - houseOrdering.index(agent.assigned_house))/ max(len(houseOrdering) - 1, 1)
+        sumImprovement += improvement
+        nonDummyAgents += 1
 
-
-    print("Average Improvement: ", float(sumImprovement) / len(self.final))
+    print("Total Rounds: ", self.roundIndex)
+    print("Total Agents: ", len(self.final))
+    print("Number of Non Dummy agents: " , nonDummyAgents)
+    print("Average Improvement: ", float(sumImprovement) / nonDummyAgents)
     print("Preference Counter: ", preferenceCounter)
     print("Dining Hall Numbers: ", diningHallNumbers)
     print("Number of Swaps: ", numberOfSwaps)

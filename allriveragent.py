@@ -12,6 +12,7 @@ class AllRiverAgent():
     self.target = None
     self.assigned_house = initial_house
     self.immutable_preferences = copy.deepcopy(temp_pref)
+    self.type = "AllRiver"
 
 
   def report_pref(self):
