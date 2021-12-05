@@ -158,6 +158,7 @@ class Sim():
     preferenceCounter = [0 for i in range(12)]
     houses = ['dunster', 'leverett', 'mather', 'adams', 'lowell', 'quincy', 'winthrop', 'kirkland', 'eliot', 'cabot', 'currier', 'pfoho']
     diningHallNumbers = {x: 0 for x in houses}
+    diningHallTradedNumbers = {x: 0 for x in houses}
     for agent in self.final:
       print('ID: ', agent.id, ' ' * (7-len(str(agent.id))), 'Initial house: ', agent.initial_house, ' ' * (10-len(agent.initial_house)),'Assigned house: ', agent.assigned_house, ' ' * (10-len(agent.assigned_house)), 'Immutable_preferences: ', agent.immutable_preferences)
       if agent.initial_house != agent.assigned_house:
@@ -173,6 +174,8 @@ class Sim():
       print(agent.type)
       
       if agent.type != "Dummy":
+        if agent.assigned_house != agent.initial_house:
+          diningHallTradedNumbers[agent.assigned_house] += 1
         diningHallNumbers[agent.assigned_house] += 1
         preferenceCounter[houseOrdering.index(agent.assigned_house)] += 1
         improvement = (houseOrdering.index(agent.initial_house) - houseOrdering.index(agent.assigned_house))/ max(len(houseOrdering) - 1, 1)
@@ -185,6 +188,7 @@ class Sim():
     print("Average Improvement: ", float(sumImprovement) / nonDummyAgents)
     print("Preference Counter: ", preferenceCounter)
     print("Dining Hall Numbers: ", diningHallNumbers)
+    print("Dining Hall Traded Numbers: ", diningHallTradedNumbers)
     print("Number of Swaps: ", numberOfSwaps)
     
 
