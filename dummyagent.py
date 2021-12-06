@@ -5,6 +5,7 @@ class DummyAgent():
     self.preferences = [target_house]
     self.immutable_preferences = [target_house]
     self.target = None
+    self.priority = None
     self.assigned_house = initial_house
     self.type = "Dummy"
 

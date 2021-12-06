@@ -3,6 +3,9 @@ import cProfile
 import random
 import copy
 import params
+import numpy as np
+import matplotlib.pyplot as plt
+plt.style.use('seaborn-whitegrid')
 from quadagent import QuadAgent
 from allriveragent import AllRiverAgent
 from rivercentralagent import RiverCentralAgent
@@ -14,8 +17,8 @@ from graph import Graph
 
 class Sim():
   def __init__(self):
+      self.agent_params = params.Weekday_Dinner # Swap out with other presets from params.py
       self.top_preferences = dict()
-      self.agent_params = params.Weekday_Lunch
       self.final = []
       self.all_cycles = []
 
@@ -69,17 +72,10 @@ class Sim():
       
     agent_list, dummys = initialize_agents()
     priority_agent_list = copy.deepcopy(agent_list)
-    
-    random.Random(1).shuffle(priority_agent_list)
+    random.shuffle(priority_agent_list)
+    for i in range(len(priority_agent_list)):
+      priority_agent_list[i].priority = i
     priority_agent_list.extend(dummys)
-    # random.Random(1).shuffle(dummys)
-    # priority_agent_list.extend(dummys)
-    # print("Priority:")
-    # for i in (priority_agent_list):
-    #   print("ID:", i.id)
-    #   print("AGENT: ", i.id, ": ",i.preferences, ' Initial house: ', i.initial_house, " Target: ", i.target)
-    #   print('')
-
 
     #Randomize Agent_list order
     def find_target(agent, p_agent_list):
@@ -92,9 +88,7 @@ class Sim():
       """
       while len(agent.preferences) > 0:
         for a_j in p_agent_list:
-          # print(len(agent.preferences))
           if agent.preferences[0] == a_j.initial_house:
-            # print("NEW TARGET: ", a_j)
             return a_j
         agent.preferences.pop(0)
 
@@ -122,10 +116,8 @@ class Sim():
 
       # remove agents with self loops
       for cycle in graph.sccs:
-        #print(cycle)
         if len(cycle) == 1:
           if cycle[0].target is None or cycle[0].target.initial_house == cycle[0].initial_house:
-            print("Removing: ", cycle[0].id)
             self.final.append(cycle[0])
             priority_agent_list.remove(cycle[0])
       
@@ -134,7 +126,6 @@ class Sim():
       valid_cycles = list(filter(lambda c: len(c) > 1, graph.sccs))
 
       # Using graph.sccs, goes through and removes agents in cycles from priority_agent_list as well as creates dictionary of matchings
-      print('REMOVED: ', list(map(lambda x: list(map(lambda y: y.id, x)),valid_cycles)))
       self.all_cycles.extend(valid_cycles)
       
       if valid_cycles == []:
@@ -148,7 +139,6 @@ class Sim():
             priority_agent_list.remove(agent)
             agent.assigned_house = agent.target.initial_house
       
-      print("REMAINING: ", list(map(lambda x: x.id, priority_agent_list)))
     #print("Total Rounds: ", self.roundIndex)
 
   def printStats(self):
@@ -159,21 +149,17 @@ class Sim():
     houses = ['dunster', 'leverett', 'mather', 'adams', 'lowell', 'quincy', 'winthrop', 'kirkland', 'eliot', 'cabot', 'currier', 'pfoho']
     diningHallNumbers = {x: 0 for x in houses}
     diningHallTradedNumbers = {x: 0 for x in houses}
+    priority_preference = []
     for agent in self.final:
-      print('ID: ', agent.id, ' ' * (7-len(str(agent.id))), 'Initial house: ', agent.initial_house, ' ' * (10-len(agent.initial_house)),'Assigned house: ', agent.assigned_house, ' ' * (10-len(agent.assigned_house)), 'Immutable_preferences: ', agent.immutable_preferences)
       if agent.initial_house != agent.assigned_house:
         numberOfSwaps += 1
-      
       if agent.initial_house not in agent.immutable_preferences:
         houseOrdering = (copy.deepcopy(agent.immutable_preferences))
         houseOrdering.append(agent.initial_house)
-        print(houseOrdering)
       else:
-        houseOrdering = copy.deepcopy(agent.immutable_preferences)
-      
-      print(agent.type)
-      
+        houseOrdering = copy.deepcopy(agent.immutable_preferences) 
       if agent.type != "Dummy":
+        priority_preference.append((agent.priority, houseOrdering.index(agent.assigned_house)))
         if agent.assigned_house != agent.initial_house:
           diningHallTradedNumbers[agent.assigned_house] += 1
         diningHallNumbers[agent.assigned_house] += 1
@@ -181,28 +167,66 @@ class Sim():
         improvement = (houseOrdering.index(agent.initial_house) - houseOrdering.index(agent.assigned_house))/ max(len(houseOrdering) - 1, 1)
         sumImprovement += improvement
         nonDummyAgents += 1
-
-    print("Total Rounds: ", self.roundIndex)
-    print("Total Agents: ", len(self.final))
-    print("Number of Non Dummy agents: " , nonDummyAgents)
-    print("Average Improvement: ", float(sumImprovement) / nonDummyAgents)
-    print("Preference Counter: ", preferenceCounter)
-    print("Dining Hall Numbers: ", diningHallNumbers)
-    print("Dining Hall Traded Numbers: ", diningHallTradedNumbers)
-    print("Number of Swaps: ", numberOfSwaps)
-    
-
-
-    # numCycles = 0
-    # for cycle in self.all_cycles:
-    #   numCycles += len(cycle)
-    print("Average Cycle Length", len(sum(self.all_cycles, [])) / len(self.all_cycles))
-    
+    return {
+      'total_rounds_list': self.roundIndex,
+      'total_agents_list': len(self.final),
+      'nonDummyAgents_list': nonDummyAgents,
+      'averageImprovement_list': float(sumImprovement) / nonDummyAgents,
+      'preferenceCounter_list': preferenceCounter,
+      'diningHallNumbers_list': diningHallNumbers,
+      'diningHallTradedNumbers_list': diningHallTradedNumbers,
+      'numberOfSwaps_list': numberOfSwaps,
+      'averageCycleLength_list': len(sum(self.all_cycles, [])) / len(self.all_cycles),
+      'aggregate_priority-preference:': priority_preference
+    }
     
 
 def main():
-  sim = Sim()
-  sim.run_sim()
-  sim.printStats()
+  iterations = 10 # number of iterations to run
+
+  overall_stats = {
+    'total_rounds_list': [],
+    'total_agents_list': [],
+    'nonDummyAgents_list': [],
+    'averageImprovement_list': [],
+    'preferenceCounter_list': [],
+    'diningHallNumbers_list': [],
+    'diningHallTradedNumbers_list': [],
+    'numberOfSwaps_list': [],
+    'averageCycleLength_list': [],
+    'aggregate_priority-preference:': []
+  }
+  for i in range(iterations):
+    def dict_mean(dict_list):
+      mean_dict = {}
+      for key in dict_list[0].keys():
+          mean_dict[key] = sum(d[key] for d in dict_list) / len(dict_list)
+      return mean_dict
+    sim = Sim()
+    sim.run_sim()
+    stats = sim.printStats()
+    for stat in stats:
+      overall_stats[stat].append(stats[stat])
+
+  print("Total Rounds: ", sum(overall_stats['total_rounds_list']) / iterations)
+  print("Total Agents: ", sum(overall_stats['total_agents_list']) / iterations)
+  print("Number of Non Dummy agents: " , sum(overall_stats['nonDummyAgents_list']) / iterations)
+  print("Average Improvement: ", sum(overall_stats['averageImprovement_list']) / iterations)
+  print("Preference Counter: ", np.average(overall_stats['preferenceCounter_list'], axis=0))
+  print("Dining Hall Numbers: ", dict_mean(overall_stats['diningHallNumbers_list']))
+  print("Dining Hall Traded Numbers: ", dict_mean(overall_stats['diningHallTradedNumbers_list']))
+  print("Number of Swaps: ", sum(overall_stats['numberOfSwaps_list']) / iterations)
+  print("Average Cycle Length", sum(overall_stats['averageCycleLength_list']) / iterations)
+  x = np.array(list(map(lambda x: x[0] + 1, sum(overall_stats['aggregate_priority-preference:'], []))))
+  y = np.array(list(map(lambda x: x[1], sum(overall_stats['aggregate_priority-preference:'], []))))
+  plt.scatter(x, y)
+  plt.title('Effect of Priority on Assigned Dining Hall Preference')
+  plt.xlabel('Priority Rank')
+  plt.ylabel('Achieved Preference')
+  m, b = np.polyfit(x, y, 1)
+  plt.plot(x, m*x + b, color='red')
+  plt.show()
+
+
 if __name__ == "__main__":
   cProfile.run('main()',"profile.txt")

@@ -1,14 +1,14 @@
 from particularagent import ParticularAgent
 from rivercentralagent import RiverCentralAgent
 
-seed = 1
-
+# Constants for agent preference permutations
 riverEastHouses = ['dunster', 'leverett', 'mather']
 riverCentralHouses = ['adams', 'lowell', 'quincy']
 riverWestHouses = ['winthrop', 'kirkland', 'eliot']
 allRiverHouses = ['dunster', 'leverett', 'mather', 'adams', 'lowell', 'quincy', 'winthrop', 'kirkland', 'eliot']
 quadHouses = ['cabot', 'currier', 'pfoho']
 
+# Agent definition presets for creation in Sim.py > Sim.initialize_agents()
 test_params = {
   'adams': {
     'QuadAgent': 1,
