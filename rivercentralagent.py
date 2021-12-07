@@ -15,9 +15,6 @@ class RiverCentralAgent():
     self.assigned_house = initial_house
     self.type = "RiverCentral"
 
-  def report_pref(self):
-    #TODO preferences probability distribution 
-    return #Some sort of strategy??
 
 
 

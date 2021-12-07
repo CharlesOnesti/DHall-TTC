@@ -16,9 +16,6 @@ class AllRiverAgent():
     self.type = "AllRiver"
 
 
-  def report_pref(self):
-    #TODO preferences probability distribution 
-    return #Some sort of strategy??
 
 
 

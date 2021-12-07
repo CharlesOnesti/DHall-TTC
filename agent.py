@@ -12,9 +12,6 @@ class Agent():
     self.preferences = []
     self.immutable_preferences = []
 
-  def report_pref(self):
-    #TODO preferences probability distribution 
-    return #Some sort of strategy??
 
 
 

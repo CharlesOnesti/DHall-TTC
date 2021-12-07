@@ -15,9 +15,6 @@ class QuadAgent():
     self.assigned_house = initial_house
     self.type = "Quad"
 
-  def report_pref(self):
-    #TODO preferences probability distribution 
-    return #Some sort of strategy??
 
 
 
